@@ -142,11 +142,11 @@ def main(argv):
 python stack.py fileName
 
 TODO:
-    -p: pid
-    -r: regular expression
-    -d: process path
-    -t: times for fetch and analysis stack multi times
-    -n: interval in seconds, only valid with -t
+    -p: pid to fetch stack dump
+    -r: regular expression to fetch stack dump
+    -d: process path to fetch stack dump
+    -t: times to fetch stack multi times
+    -n: interval in seconds, only valid with -t, default 3 seconds
 '''
     parser = optparse.OptionParser(usage=info)
     parser.add_option("-f", "--filename", action="store", type="string", dest="filename")
