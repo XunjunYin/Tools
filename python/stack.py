@@ -10,6 +10,7 @@ import re
 import sys
 import optparse
 import time
+from datetime import datetime
 
 
 times = 1
@@ -142,18 +143,19 @@ def repeat(f, x):
     for i in range(times):
         if i > 0:
             time.sleep(interval)
-        f(x)
+        stack = f(x)
+        filename = '/tmp/stack_%s.summary' % datetime.now().strftime("%Y%m%d%H%M%S")
+        open(filename, 'w').write('\n'.join(stack.to_string()))
+        print 'stack summary saved in file: %s' % filename
 
 
 def process_filename(filename):
-    stack = Stack(open(filename).readlines())
-    print '\n'.join(stack.to_string())
+    return Stack(open(filename).readlines())
 
 
 def process_pid(pid):
     command = '%s %s' % (get_jstack_command(pid), pid)
-    stack = Stack(os.popen(command).readlines())
-    print '\n'.join(stack.to_string())
+    return Stack(os.popen(command).readlines())
 
 
 def process_regexp(reg):
@@ -189,22 +191,22 @@ def main(argv):
     parser.add_option("-t", type="string", dest='times', help="times to fetch stack multi times")
     parser.add_option("-n", type="string", dest='interval', help="interval in seconds, only valid with -t, default 3")
     options, args = parser.parse_args(sys.argv[1:])
+    if args and len(args) == 1:
+        filename = args[0]
+        repeat(process_filename, filename)
+        exit(0)
+    if options.filename:
+        repeat(process_filename, options.filename)
+        exit(0)
     global times, interval
     if options.times and options.times.isdigit():
         times = int(options.times)
     if options.interval and options.interval.isdigit():
         interval = int(options.interval)
-    if args and len(args) == 1:
-        filename = args[0]
-        process_filename(filename)
-        exit(0)
-    elif options.filename:
-        process_filename(options.filename)
-        exit(0)
-    elif options.pid:
+    if options.pid:
         repeat(process_pid, options.pid)
         exit(0)
-    elif options.regexp:
+    if options.regexp:
         repeat(process_regexp, options.regexp)
         exit(0)
     else:
