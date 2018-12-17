@@ -12,6 +12,10 @@ import optparse
 import time
 
 
+times = 1
+interval = 3
+
+
 class Stack:
 
     def __init__(self, raw_lines):
@@ -134,6 +138,13 @@ class ThreadGroup:
         self.threads_count += 1
 
 
+def repeat(f, x):
+    for i in range(times):
+        if i > 0:
+            time.sleep(interval)
+        f(x)
+
+
 def process_filename(filename):
     stack = Stack(open(filename).readlines())
     print '\n'.join(stack.to_string())
@@ -178,8 +189,7 @@ def main(argv):
     parser.add_option("-t", type="string", dest='times', help="times to fetch stack multi times")
     parser.add_option("-n", type="string", dest='interval', help="interval in seconds, only valid with -t, default 3")
     options, args = parser.parse_args(sys.argv[1:])
-    times = 1
-    interval = 3
+    global times, interval
     if options.times and options.times.isdigit():
         times = int(options.times)
     if options.interval and options.interval.isdigit():
@@ -192,16 +202,10 @@ def main(argv):
         process_filename(options.filename)
         exit(0)
     elif options.pid:
-        for i in range(times):
-            if i > 0:
-                time.sleep(interval)
-            process_pid(options.pid)
+        repeat(process_pid, options.pid)
         exit(0)
     elif options.regexp:
-        for i in range(times):
-            if i > 0:
-                time.sleep(interval)
-            process_regexp(options.regexp)
+        repeat(process_regexp, options.regexp)
         exit(0)
     else:
         parser.print_help()
