@@ -5,9 +5,11 @@
 # @author yinxj
 # @date 2013-03-22
 
+import os
 import re
 import sys
 import optparse
+import time
 
 
 class Stack:
@@ -137,33 +139,70 @@ def process_filename(filename):
     print '\n'.join(stack.to_string())
 
 
-def main(argv):
-    info = '''
-python stack.py fileName
+def process_pid(pid):
+    command = '%s %s' % (get_jstack_command(pid), pid)
+    stack = Stack(os.popen(command).readlines())
+    print '\n'.join(stack.to_string())
 
-TODO:
-    -p: pid to fetch stack dump
-    -r: regular expression to fetch stack dump
-    -d: process path to fetch stack dump
-    -t: times to fetch stack multi times
-    -n: interval in seconds, only valid with -t, default 3 seconds
-'''
-    parser = optparse.OptionParser(usage=info)
-    parser.add_option("-f", "--filename", action="store", type="string", dest="filename")
-    parser.add_option("-p", "--pid", action="store", type="string", dest="pid")
-    parser.add_option("-r", "--regexp", action="store", type="string", dest="regexp")
-    parser.add_option("-d", "--path", action="store", type="string", dest="process_path")
-    parser.add_option("-t", "--times", action="store", type="string", dest="times")
-    parser.add_option("-n", "--interval", action="store", type="string", dest="interval")
-    options, args = parser.parse_args(sys.argv[1:])
-    if len(args) == 0 and not options.filename:
-        parser.print_help()
+
+def process_regexp(reg):
+    pids = []
+    for line in os.popen('ps ax | grep java').readlines():
+        if any(word in line for word in ['grep', 'stack.py']):
+            continue
+        process = re.findall(reg, line)
+        if len(process) > 0:
+            pid = re.findall('^\d+', line)
+            pids.append(pid[0])
+    if len(pids) == 0:
+        print 'failed, no java process found'
         exit(-1)
+    if len(pids) > 1:
+        print 'failed, too many process found: %s' % ', '.join(pids)
+    process_pid(pids[0])
+
+
+def get_jstack_command(pid):
+    ps = os.popen('ps -p %s' % pid).read()
+    commands = re.findall('[^\s]+java', ps)
+    return 'jstack' if len(commands) == 0 else re.sub('java', 'jstack', commands[0])
+
+
+def main(argv):
+    info = '''python stack.py fileName'''
+    parser = optparse.OptionParser(usage=info)
+    parser.add_option("-f", type="string", dest='filename', help="stack dump file to analyze")
+    parser.add_option("-p", type="string", dest='pid', help="pid to fetch stack dump")
+    parser.add_option("-r", type="string", dest='regexp', help="regular expression to fetch stack dump")
+    parser.add_option("-d", type="string", dest='path', help="process path to fetch stack dump")
+    parser.add_option("-t", type="string", dest='times', help="times to fetch stack multi times")
+    parser.add_option("-n", type="string", dest='interval', help="interval in seconds, only valid with -t, default 3")
+    options, args = parser.parse_args(sys.argv[1:])
+    times = 1
+    interval = 3
+    if options.times and options.times.isdigit():
+        times = int(options.times)
+    if options.interval and options.interval.isdigit():
+        interval = int(options.interval)
     if args and len(args) == 1:
         filename = args[0]
         process_filename(filename)
+        exit(0)
     elif options.filename:
         process_filename(options.filename)
+        exit(0)
+    elif options.pid:
+        for i in range(times):
+            if i > 0:
+                time.sleep(interval)
+            process_pid(options.pid)
+        exit(0)
+    elif options.regexp:
+        for i in range(times):
+            if i > 0:
+                time.sleep(interval)
+            process_regexp(options.regexp)
+        exit(0)
     else:
         parser.print_help()
         exit(-1)
