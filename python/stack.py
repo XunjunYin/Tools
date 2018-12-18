@@ -12,13 +12,11 @@ import optparse
 import time
 from datetime import datetime
 
-
 times = 1
 interval = 3
 
 
 class Stack:
-
     def __init__(self, raw_lines):
         self.raw_lines = raw_lines
         self.info = []
@@ -34,7 +32,8 @@ class Stack:
             if thread.__hash__() not in groups:
                 groups[thread.__hash__()] = ThreadGroup()
             groups[thread.__hash__()].add_thread(thread)
-        self.thread_groups = sorted(groups.values(), key=lambda x: x.threads_count * 10000 + len(x.stacktrace), reverse=True)
+        self.thread_groups = sorted(groups.values(), key=lambda x: x.threads_count * 10000 + len(x.stacktrace),
+                                    reverse=True)
 
     def parse_raw_lines(self):
         thread = None
@@ -102,7 +101,6 @@ class Stack:
 
 
 class Thread:
-
     def __init__(self, tid, nid):
         self.tid = tid
         self.nid = nid
@@ -118,7 +116,6 @@ class Thread:
 
 
 class ThreadGroup:
-
     def __init__(self):
         self.name = None
         self.state = None
@@ -172,6 +169,7 @@ def process_regexp(reg):
         exit(-1)
     if len(pids) > 1:
         print 'failed, too many process found: %s' % ', '.join(pids)
+        exit(-1)
     process_pid(pids[0])
 
 
@@ -182,7 +180,7 @@ def get_jstack_command(pid):
 
 
 def main(argv):
-    info = '''python stack.py fileName'''
+    info = 'The stack tool is used to analyze stack dump for a given dump file or process, currently only support Java.'
     parser = optparse.OptionParser(usage=info)
     parser.add_option("-f", type="string", dest='filename', help="stack dump file to analyze")
     parser.add_option("-p", type="string", dest='pid', help="pid to fetch stack dump")
@@ -216,4 +214,3 @@ def main(argv):
 
 if __name__ == "__main__":
     main(sys.argv)
-
