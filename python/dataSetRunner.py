@@ -2,6 +2,11 @@
 import yaml
 import json
 import requests
+import jsonpath
+
+# http://nodeca.github.io/js-yaml/
+# https://goessner.net/articles/JsonPath/
+
 
 yaml_config = """
 # todo:
