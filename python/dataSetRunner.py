@@ -10,6 +10,7 @@ import jsonpath
 
 yaml_config = """
 # todo:
+# * support post method if requests has notnull data
 # * supports string type parameters, e.g.:
 #   content: 12341,12342,12343,12344,12345,12346,12347,12348,12349,12340
 # * supports counter type parameters, e.g.:
@@ -18,8 +19,6 @@ yaml_config = """
 #   response_type: reg
 #   names: a, b, c
 #   pattern: a(\d+)b(\d+)c1(\w+)000
-# * support json fields multi-level parse
-# * support post method if requests has notnull data
 
 parameters:
 -
